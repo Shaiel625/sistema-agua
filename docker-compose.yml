@@ -1,0 +1,44 @@
+services:
+
+  # Postgres local, útil para desarrollar sin depender de Neon.
+  # Si vas a usar la base de datos en la nube (Neon), puedes borrar
+  # este servicio y simplemente poner el DATABASE_URL de Neon en
+  # Backend/.env
+  db:
+    image: postgres:16
+    container_name: postgres_agua
+    restart: always
+    environment:
+      POSTGRES_DB: agua_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Broker MQTT local, útil para probar el ESP32 en tu propia red
+  # sin depender de HiveMQ Cloud. Si vas a usar HiveMQ Cloud,
+  # puedes borrar este servicio y apuntar MQTT_HOST en Backend/.env
+  # al host de HiveMQ.
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mqtt_agua
+    restart: always
+    ports:
+      - "1883:1883"
+
+  backend:
+    build: ./Backend
+    container_name: backend_agua
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      - db
+      - mqtt
+
+volumes:
+  postgres_data:
